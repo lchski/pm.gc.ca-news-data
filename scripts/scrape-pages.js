@@ -2,6 +2,35 @@ import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
 import fs from 'fs';
 
+const savedUrlsFilePath = 'urls.json';
+const savedPagesPath = 'pages/';
+
+const savedNewsReleaseUrls = JSON.parse(fs.readFileSync(savedUrlsFilePath));
+
+for (const url of savedNewsReleaseUrls) {
+    const urlEncoded = Buffer.from(url).toString('base64');
+    const savedPagePath = `${savedPagesPath}${urlEncoded}.json`;
+
+    if (fs.existsSync(savedPagePath)) {
+        console.log(`already saved: ${url}`);
+
+        continue; // Stop if we've already saved this URL.
+    }
+
+    const pageHtml = await fetchPage(url);
+
+    const articleContent = extractArticle(pageHtml);
+
+    const pageData = {
+        path: url,
+        ...articleContent
+    };
+
+    fs.writeFileSync(savedPagePath, JSON.stringify(pageData, null, 2));
+
+    console.log(`scraped and saved: ${url} at ${savedPagePath}`);
+}
+
 async function fetchPage(pagePath) {
     const response = await fetch(`https://pm.gc.ca/${pagePath}`, {
         "headers": {
@@ -28,18 +57,3 @@ function extractArticle(html) {
         articleHtml
     };
 }
-
-const pageHtml = await fetchPage("/en/news/news-releases/2017/05/19/prime-minister-announces-changes-senior-ranks-public-service");
-
-const articleContent = extractArticle(pageHtml);
-
-console.log({
-    path: "/en/news/news-releases/2017/05/19/prime-minister-announces-changes-senior-ranks-public-service",
-    ...articleContent
-});
-
-
-
-// TBD: save entire page? save just article content? save article content and something else?
-//      if we save just content, we can just wrap it in an `<html><body></body></html>` to make it parseable ¯\_(ツ)_/¯
-//      the only other bit we might want would be page title, which maybe we just pull separately

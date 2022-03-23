@@ -8,7 +8,7 @@ on:
     - cron:  '12 8 * * *' # https://crontab.guru/#12_8_*_*_* (8 AM UTC = 3 AM ET, generally)
 
 jobs:
-  scheduled:
+  update-news-releases:
     runs-on: ubuntu-latest
     steps:
     - name: Check out this repo
@@ -24,11 +24,13 @@ jobs:
     - name: Fetch latest data
       run: |-
         node scripts/update-news-urls.js
+        node scripts/scrape-pages.js
     - name: Commit and push if it changed
       run: |-
           git config user.name "Automated"
           git config user.email "actions@users.noreply.github.com"
           git add urls.json
+          git add pages/*.json
           timestamp=$(date -u)
           git commit -m "Latest data: ${timestamp}" || exit 0
           git push

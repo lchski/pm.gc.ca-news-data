@@ -17,17 +17,28 @@ async function fetchPage(pagePath) {
     return responseHTML;
 }
 
-function extractArticleContent(html) {
+function extractArticle(html) {
     const $ = cheerio.load(html);
 
-    const articleContent = $('.content-news-article');
+    const pageTitle = $('title').text();
+    const articleHtml = $('.content-news-article').html();
 
-    return articleContent.html();
+    return {
+        pageTitle,
+        articleHtml
+    };
 }
 
-const pageHtml = await fetchPage("/en/news/itineraries/2022/03/01/prime-ministers-itinerary-wednesday-march-2-2022");
+const pageHtml = await fetchPage("/en/news/news-releases/2017/05/19/prime-minister-announces-changes-senior-ranks-public-service");
 
-console.log(extractArticleContent(pageHtml));
+const articleContent = extractArticle(pageHtml);
+
+console.log({
+    path: "/en/news/news-releases/2017/05/19/prime-minister-announces-changes-senior-ranks-public-service",
+    ...articleContent
+});
+
+
 
 // TBD: save entire page? save just article content? save article content and something else?
 //      if we save just content, we can just wrap it in an `<html><body></body></html>` to make it parseable ¯\_(ツ)_/¯
